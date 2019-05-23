@@ -2,10 +2,9 @@
 
 	class CityAirAPI
 	{
+		private $baseUrl = 'https://cityair.io/backend-api/request.php?map=/DevicesApi/';
 		public  $login;
 		public  $password;
-		private $token;
-		private $baseUrl = 'https://cityair.io/backend-api/request.php?map=/DevicesApi/';
 
 		private function getData($url, $args = null) {
 			$options = [
@@ -81,7 +80,6 @@
 					}
 				}
 				unset ($ourDevice->SourceId);
-				//				var_dump($ourDevice);
 				return $ourDevice;
 			} else {
 				return false;
@@ -90,17 +88,7 @@
 
 		public function getPackets($args) {
 			$url      = $this->baseUrl . 'GetPackets';
-			$data     = [
-			  "FilterType"      => 1,
-			  "DeviceId"        => 340,
-			  "MaxPacketsCount" => 1000,
-			  "Skip"            => 0,
-			  "BeginTime"       => "2018-06-04T09:31:22.477Z",
-			  "EndTime"         => "2018-06-07T09:31:22.477Z",
-			  "LastPacketId"    => null
-			];
-			$data     = $args;
-			$response = $this->getData($url, $data);
-			var_dump($response);
+			$response = $this->getData($url, $args);
+			return $response;
 		}
 	}
