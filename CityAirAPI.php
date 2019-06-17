@@ -35,13 +35,16 @@
 
 			$content = curl_exec($ch);
 			$status  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-			curl_close($ch);
-			$out = json_decode($content);
-
-			if ($status > 399 || $out->IsError) {
-				throw new Exception("Exception $status: $content");
+			if ($content && $out = json_decode($content)) {
+				if ($status > 399) {
+					throw new Exception($status);
+				}
+				if ($out->IsError) {
+					throw new Exception($out->ErrorMessage);
+				}
 			}
-			return $out;
+			curl_close($ch);
+			return $out ?: false;
 		}
 
 		public function getAllDevices() {
