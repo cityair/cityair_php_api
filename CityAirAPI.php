@@ -64,6 +64,7 @@
 			$deviceId             = $deviceData->Devices[0]->DeviceId;
 			$filter['FilterType'] = 1;
 			$filter['DeviceId']   = $deviceId;
+			$filter['Take']       = $filter['Take'] ? : 100000;
 			$url                  = $this->baseUrl . 'GetPackets';
 			$packets              = ($this->getData($url, $filter))->Packets;
 			$out                  = [];
