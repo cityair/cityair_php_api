@@ -8,27 +8,24 @@
     	$CAApi->login ='YOUR_LOGIN';
     	$CAApi->password = 'YOUR_PASSWORD';
 
-* информация с определенного устройства, где DEVICE_ID = id устройства
+* информация с определенного устройства, где SERIAL_NUMBER = серийный номер устройства
 
-    	$CAApi->getDeviceById('DEVICE_ID');
+    	$CAApi->getDeviceBySerial('SERIAL_NUMBER');
 
 * информация обо всех устройствах 
  
-        $CAApi->getAllDevices();
+        $CAApi->getDevices();
     
 * получение информации о пакетах с выбранной станции с фильтром по параметрам
 
-    	$args = [
-    	  "FilterType"      => '',
-    	  "DeviceId"        => '',
-    	  "MaxPacketsCount" => '',
-    	  "Skip"            => '',
-    	  "BeginTime"       => '',
-    	  "EndTime"         => '',
-    	  "LastPacketId"    => ''
+        $serial = 'SERIAL_NUMBER';
+    	$filter = [
+    	  "TimeBegin"       => '',
+    	  "TimeEnd"         => '',
+    	  "Take"            => ''
     	];
-    	$CAApi->getPackets($args);
-    "BeginTime" и "EndTime" указываются в формате 
+    	$CAApi->getPackets($serial, $filter);
+    "BeginTime" и "EndTime" указываются в формате ISO 
         
         2018-06-04T09:31:22.477Z    	
-
+    "Take" - количество пакетов от станции 

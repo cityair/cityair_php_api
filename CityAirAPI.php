@@ -2,33 +2,31 @@
 
 	class CityAirAPI
 	{
-		private $baseUrl = 'https://cityair.io/backend-api/request.php?map=/DevicesApi/';
+		//		private $baseUrl = 'https://cityair.io/backend-api/request.php?map=/DevicesApi/';
+		//		private $baseUrl = 'https://cityair.io/backend-api/request.php?map=/DevicesApi2/';
+		private $baseUrl = 'https://develop.cityair.io/backend-api/request-dev-pg.php?map=/DevicesApi2/';
 		public  $login;
 		public  $password;
 
-		private function getData($url, $args = null) {
-			$options = [
+		private function getData($url, $args = NULL) {
+			$options                     = [
 			  CURLOPT_URL            => $url,
 			  //			  CURLOPT_USERPWD => "$this->login:$this->password",
 			  //			  CURLOPT_XOAUTH2_BEARER => "$this->token",
 			  CURLOPT_HTTPHEADER     => [
 				'Content-Type: application/json',
-				'Accept: application/json'
+				'Accept: application/json',
 			  ],
 			  CURLOPT_CUSTOMREQUEST  => 'POST',
-			  CURLOPT_RETURNTRANSFER => true,
+			  CURLOPT_RETURNTRANSFER => TRUE,
 			];
-			if ($args) {
-				$data                        = [
-				  "Auth"   => [
-					"User" => $this->login,
-					"Pwd"  => $this->password
-				  ],
-				  "Filter" => $args,
-				];
-				$json_args                   = json_encode($data);
-				$options[CURLOPT_POSTFIELDS] = $json_args;
-			}
+			$data                        = [
+			  "User"   => $this->login,
+			  "Pwd"    => $this->password,
+			  "Filter" => $args,
+			];
+			$json_args                   = json_encode($data);
+			$options[CURLOPT_POSTFIELDS] = $json_args;
 
 			$ch = curl_init();
 			curl_setopt_array($ch, $options);
@@ -44,54 +42,44 @@
 				}
 			}
 			curl_close($ch);
-			return $out ?: false;
+			return $out->Result ? : FALSE;
 		}
 
-		public function getAllDevices() {
+		public function getDevices() {
+			return $this->getDeviceBySerial();
+		}
+
+		public function getDeviceBySerial($deviceId = NULL) {
 			$url      = $this->baseUrl . 'GetDevices';
 			$data     = [
-			  "DeviceId" => ''
+			  "SerialNumber" => $deviceId,
 			];
 			$response = $this->getData($url, $data);
 			return $response;
 		}
 
-		public function getDeviceById($deviceId) {
-			$devices = $this->getAllDevices();
-			foreach ($devices->Result->Devices as $device) {
-				if ($device->DeviceId == $deviceId) {
-					$ourDevice = $device;
-					break;
-				}
-			}
-			if ($ourDevice) {
-				foreach ($ourDevice->DeviceTagIds as $tagId) {
-					foreach ($devices->Result->DeviceTags as $deviceTag) {
-						if ($deviceTag->DeviceTagId == $tagId) {
-							$tags[] = $deviceTag->Title;
-							continue 2;
+		public function getPackets($serial, $filter) {
+			$deviceData = $this->getDeviceBySerial($serial);
+			//			$packetsValueTypes = $deviceData->PacketsValueTypes;
+			$deviceId             = $deviceData->Devices[0]->DeviceId;
+			$filter['FilterType'] = 1;
+			$filter['DeviceId']   = $deviceId;
+			$url                  = $this->baseUrl . 'GetPackets';
+			$packets              = ($this->getData($url, $filter))->Packets;
+			$out                  = [];
+			foreach ($packets as &$packet) {
+				$newData         = [];
+				$newData['date'] = $packet->SendDate;
+				foreach ($packet->Data as $data) {
+					foreach ($deviceData->PacketsValueTypes as $packetType) {
+						if ($data->VT == $packetType->ValueType) {
+							$newData[$packetType->TypeName] = $data->V . $packetType->Measurement;
+							break;
 						}
 					}
 				}
-				$ourDevice->DeviceTags = $tags;
-				unset ($ourDevice->DeviceTagIds);
-
-				foreach ($devices->Result->DeviceSources as $deviceSource) {
-					if ($deviceSource->SourceId == $ourDevice->SourceId) {
-						$ourDevice->Source = $deviceSource;
-						break;
-					}
-				}
-				unset ($ourDevice->SourceId);
-				return $ourDevice;
-			} else {
-				return false;
+				$out[] = $newData;
 			}
-		}
-
-		public function getPackets($args) {
-			$url      = $this->baseUrl . 'GetPackets';
-			$response = $this->getData($url, $args);
-			return $response;
+			return $out;
 		}
 	}
